@@ -45,13 +45,12 @@ export const loginUser = async (credentials) => {
 
 // ✅ Get Current User Profile
 export const getMe = async () => {
-  // No need to manually pass token; axios interceptor will handle it
   return axiosInstance.get("/api/auth/me");
 };
 
 // ✅ Email Verification (Updated for OTP system)
-export const verifyEmail = async (email, otp) => {
-  return axiosInstance.post(`/api/auth/verify-email`, { email, otp });
+export const verifyEmail = async (payload) => {
+  return axiosInstance.post(`/api/auth/verify-email`, payload);
 };
 
 // ✅ Resend Verification Email
@@ -67,6 +66,11 @@ export const forgotPassword = async (email) => {
 // ✅ Reset Password
 export const resetPassword = async (data) => {
   return axiosInstance.post('/api/auth/reset-password', data);
+};
+
+// ✅ Update user profile
+export const updateProfile = async (profileData) => {
+  return axiosInstance.put('/api/auth/profile', profileData);
 };
 
 // ✅ Logout function
@@ -85,6 +89,7 @@ const authApi = {
   logoutUser,
   forgotPassword,
   resetPassword,
+  updateProfile,
 };
 
 export default authApi;

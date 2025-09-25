@@ -4,52 +4,66 @@ const sequelize = require('../config/db');
 const User = sequelize.define('User', {
   id: {
     type: DataTypes.CHAR(36),
-    primaryKey: true
+    primaryKey: true,
+    allowNull: false,
   },
-  name: {
+  firstName: {
     type: DataTypes.STRING(100),
-    allowNull: true
+    allowNull: true,
+  },
+  lastName: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
   email: {
     type: DataTypes.STRING(255),
     allowNull: false,
-    unique: true
+    unique: true,
   },
   password_hash: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: true,
   },
   email_verified: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false
+    allowNull: false,
+    defaultValue: false,
   },
   provider: {
     type: DataTypes.ENUM('email', 'google', 'github'),
-    defaultValue: 'email'
+    allowNull: false,
+    defaultValue: 'email',
   },
   oauth_id: {
     type: DataTypes.STRING(255),
-    allowNull: true
+    allowNull: true,
   },
   verification_token: {
     type: DataTypes.STRING(255),
-    allowNull: true
+    allowNull: true,
   },
   reset_token: {
     type: DataTypes.STRING(255),
-    allowNull: true
+    allowNull: true,
   },
   reset_token_expires: {
     type: DataTypes.DATE,
-    allowNull: true
+    allowNull: true,
   },
-  profileImage: {
-  type: DataTypes.STRING,
-  allowNull: true, // or false if required
-},
-
+  role: {
+    type: DataTypes.ENUM('client', 'coach', 'admin'),
+    allowNull: false,
+    defaultValue: 'client',
+  },
+  phone: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
 }, {
-  tableName: 'users'
+  tableName: 'users',
+  timestamps: true,
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
 });
 
 module.exports = User;

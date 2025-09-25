@@ -6,14 +6,17 @@ import ErrorBoundary from "components/ErrorBoundary";
 import NotFound from "pages/NotFound";
 import UserLogin from './pages/user-login';
 import EmailVerification from './pages/email-verification';
-import UserProfileManagement from './pages/user-profile-management';
 import UserRegistration from './pages/user-registration';
 import PasswordResetPage from './pages/password-reset';
 import Homepage from './pages/homepage';
 import PrivateRoute from "./auth/PrivateRoute";
 import Auth0Callback from "./auth/Auth0Callback";
-import RoleSelection from "./pages/role-selection"; // ✅ add this
+import RoleSelection from "./pages/role-selection";
 
+// Import Dashboards
+import ClientDashboard from './pages/dashboards/client-dashboard';
+import CoachDashboard from './pages/dashboards/coach-dashboard';
+import AdminDashboard from './pages/dashboards/admin-dashboard';
 
 const Routes = () => {
   return (
@@ -29,20 +32,39 @@ const Routes = () => {
         <Route path="/password-reset" element={<PasswordResetPage />} />
         <Route path="/password-reset/:token" element={<PasswordResetPage />} />
         <Route path="/role-selection" element={<RoleSelection />} />
-        {/* Protected routes */}
+
+        {/* Dashboard Routes - Protected */}
+        <Route
+          path="/dashboard/client"
+          element={
+            <PrivateRoute>
+              <ClientDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/coach"
+          element={
+            <PrivateRoute>
+              <CoachDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin"
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Legacy Protected route (Optional) */}
         <Route
           path="/homepage"
           element={
             <PrivateRoute>
               <Homepage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/user-profile-management"
-          element={
-            <PrivateRoute>
-              <UserProfileManagement />
             </PrivateRoute>
           }
         />
