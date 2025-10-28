@@ -1,76 +1,97 @@
-require("dotenv").config();
-const { expressjwt: jwt } = require("express-jwt");
-const jwksRsa = require("jwks-rsa");
+const { expressjwt: jwt } = require('express-jwt');
 
-// ==============================
-// Middleware for Local JWT (HS256)
-// ==============================
-const authenticateLocal = jwt({
-  secret: process.env.JWT_SECRET,
-  algorithms: ["HS256"],
-  requestProperty: "user", // decoded payload will be stored in req.user
-  getToken: (req) => {
-    if (req.headers.authorization && req.headers.authorization.split(" ")[0] === "Bearer") {
-      return req.headers.authorization.split(" ")[1];
-    }
-    return null;
-  },
-});
+const { User } = require('../../models')
+const jsonwebtoken = require('jsonwebtoken'); // 👈 This import is needed for authenticateAllowExpired
 
-// ==============================
-// Middleware for Auth0 JWT (RS256)
-// ==============================
-const authenticateAuth0 = jwt({
-  secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
-  }),
-  audience: process.env.AUTH0_AUDIENCE,
-  issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-  algorithms: ["RS256"],
-  requestProperty: "auth", // decoded token will be stored in req.auth
-  getToken: (req) => {
-    if (req.headers.authorization && req.headers.authorization.split(" ")[0] === "Bearer") {
-      return req.headers.authorization.split(" ")[1];
-    }
-    return null;
-  },
-});
+// This variable is unused in this file, which is fine.
+const REFRESH_COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || 'refresh_token';
+// This is the correct cookie name for the ACCESS token
+const ACCESS_COOKIE_NAME = 'jwt'; 
 
-// ==============================
-// Combined Middleware
-// ==============================
-const authenticate = (req, res, next) => {
-  authenticateLocal(req, res, (err) => {
-    if (!err) {
-      // Local JWT verified successfully
-      if (!req.user.id && req.user.userId) {
-        req.user.id = req.user.userId; // normalize key
-      }
-      return next();
-    }
-
-    authenticateAuth0(req, res, (err2) => {
-      if (err2) {
-        // Both failed → unauthorized
-        return res.status(401).json({
-          error: "Unauthorized: Invalid or missing token",
-          details: process.env.NODE_ENV === "development" ? err2.message : undefined,
-        });
-      }
-
-      // Normalize Auth0 payload to req.user
-      req.user = {
-        id: req.auth.sub, // use `id` consistently
-        email: req.auth.email,
-        name: req.auth.name || "",
-      };
-
-      next();
-    });
-  });
+// This helper function correctly reads the 'jwt' cookie OR the Bearer token
+const getTokenFromRequest = (req) => {
+  if (req.cookies && req.cookies[ACCESS_COOKIE_NAME]) {
+    return req.cookies[ACCESS_COOKIE_NAME];
+  }
+  if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+    return req.headers.authorization.split(' ')[1];
+  }
+  return null;
 };
 
-module.exports = { authenticate, authenticateLocal, authenticateAuth0 };
+// Middleware to protect routes (STRICT - requires login)
+// This will correctly fail with a 401 when the access token expires
+const authenticate = jwt({
+  secret: process.env.JWT_SECRET, // Uses the main access token secret
+  algorithms: ['HS256'],
+  requestProperty: 'user', // <- put decoded token on req.user
+  getToken: getTokenFromRequest,
+});
+
+// Middleware to OPTIONALLY check for a user
+const authenticateOptionally = jwt({
+  secret: process.env.JWT_SECRET,
+  algorithms: ['HS256'],
+  requestProperty: 'user',
+  credentialsRequired: false, // <-- This allows requests WITHOUT a token
+  getToken: getTokenFromRequest,
+});
+
+// This custom middleware for testimonials is also fine
+const authenticateAllowExpired = (req, res, next) => {
+  const token = getTokenFromRequest(req);
+
+  if (!token) {
+    // No token, just proceed.
+    return next();
+  }
+
+  try {
+    // 1. Try to verify the token normally
+    const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    req.user = payload; // Attach valid user to request
+    return next();
+  } catch (error) {
+    // 2. If it fails, check if it's an expiration error
+    if (error.name === 'TokenExpiredError') {
+      console.warn('Auth Middleware: Token expired, but proceeding for review check/submission.');
+      // Token is expired, but we still want the user ID
+      const decodedPayload = jsonwebtoken.decode(token);
+      req.user = decodedPayload; // Attach EXPIRED user to request
+      return next();
+    }
+    
+    // 3. If it's another error (e.g., invalid signature), treat as unauthenticated
+    console.error('Auth Middleware: Invalid token.', error.message);
+    return next();
+  }
+};
+
+
+const authorize = (roles = []) => {
+  if (typeof roles === 'string') {
+    roles = [roles];
+  }
+
+  return [
+    authenticate,
+    async (req, res, next) => {
+      try {
+        const user = await User.findByPk(req.user.userId);
+        if (!user || !roles.some(role => user.roles.includes(role))) {
+          return res.status(403).json({ error: 'Forbidden: You do not have the required permissions.' });
+        }
+        next();
+      } catch (error) {
+        next(error);
+      }
+    }
+  ];
+};
+
+module.exports = {
+  authenticate,
+  authorize,
+  authenticateOptionally,
+  authenticateAllowExpired, 
+};

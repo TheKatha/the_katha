@@ -1,3 +1,4 @@
+// Frontend/src/pages/role-selection/components/RoleCard.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
@@ -18,7 +19,7 @@ const RoleCard = ({ role }) => {
   return (
     <div className="border border-gray-200 rounded-xl transition-all duration-200">
       {/* Main Role Card */}
-      <div 
+      <div
         className="p-6 cursor-pointer"
         onClick={toggleExpanded}
       >
@@ -26,10 +27,10 @@ const RoleCard = ({ role }) => {
           <div className="flex items-center space-x-4">
             {/* Role Icon */}
             <div className={`w-14 h-14 ${role?.iconBgColor} rounded-full flex items-center justify-center`}>
-              <Icon 
-                name={role?.icon} 
-                size={24} 
-                className="text-white" 
+              <Icon
+                name={role?.icon}
+                size={24}
+                className="text-white"
                 strokeWidth={2}
               />
             </div>
@@ -47,9 +48,9 @@ const RoleCard = ({ role }) => {
 
           {/* Arrow Indicator */}
           <div className="flex items-center">
-            <Icon 
-              name={isExpanded ? "ChevronUp" : "ChevronRight"} 
-              size={20} 
+            <Icon
+              name={isExpanded ? "ChevronUp" : "ChevronRight"}
+              size={20}
               className="text-gray-400"
               strokeWidth={2}
             />
@@ -66,16 +67,16 @@ const RoleCard = ({ role }) => {
               {role?.id === 'client' && "Book sessions with your coach, access resources, and track your progress."}
               {role?.id === 'admin' && "Manage platform settings, user accounts, and system administration."}
             </p>
-            
+
             {role?.id === 'admin' ? (
-              // New: Single button for Admin
+              // Updated: Single button for Admin linking directly to the dashboard
               <Button
                 variant="default"
                 size="sm"
                 fullWidth
                 asChild
               >
-                <Link to={role?.loginPath}>
+                <Link to='/dashboard/admin'>
                   Access Admin Dashboard
                 </Link>
               </Button>
@@ -88,7 +89,7 @@ const RoleCard = ({ role }) => {
                   className="flex-1"
                   asChild
                 >
-                  <Link to={role?.loginPath}>
+                  <Link to='/user-login' state={{ role: role?.id }}>
                     Login as {role?.title}
                   </Link>
                 </Button>

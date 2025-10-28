@@ -1,4 +1,4 @@
-// In src/auth/Auth0Callback.jsx
+// In Frontend/src/auth/Auth0Callback.jsx
 import React, { useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,8 +7,11 @@ import axios from 'axios';
 import Icon from '../components/AppIcon';
 
 const Auth0Callback = () => {
-  const { user, isAuthenticated, getAccessTokenSilently } = useAuth0();
-  const { setAccessToken, setUser } = useAuth(); // ✅ store user info in context
+  // ⚠️ TEMPORARILY DISABLED Auth0 Social Login
+  /*
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  // FIX 1: Correctly de-structure the 'login' function from AuthContext
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +19,6 @@ const Auth0Callback = () => {
       if (!isAuthenticated) return;
 
       try {
-        // ✅ Get Auth0 token
         const auth0Token = await getAccessTokenSilently({
           authorizationParams: {
             audience: import.meta.env.VITE_AUTH0_AUDIENCE || "https://api.coachflow.com",
@@ -28,10 +30,10 @@ const Auth0Callback = () => {
           return navigate('/user-login?error=no_token', { replace: true });
         }
 
-        // ✅ Send token to backend for user creation/login
+        // Exchange the Auth0 token for your backend token
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/api/auth/social-login`,
-          {}, // no need to send user data, backend fetches from Auth0 /userinfo
+          {},
           {
             headers: {
               Authorization: `Bearer ${auth0Token}`,
@@ -42,38 +44,13 @@ const Auth0Callback = () => {
         const backendToken = response?.data?.accessToken;
         const backendUser = response?.data?.user;
 
-        if (backendToken) {
-          // ✅ Save token & user data
-          localStorage.setItem("accessToken", backendToken);
-          setAccessToken(backendToken);
-
-          if (backendUser) {
-            localStorage.setItem("user", JSON.stringify(backendUser));
-            setUser(backendUser);
-
-            // Add role-based redirection logic here
-            const userRole = backendUser.role;
-            let redirectPath;
-            switch (userRole) {
-              case 'client':
-                redirectPath = '/dashboard/client';
-                break;
-              case 'coach':
-                redirectPath = '/dashboard/coach';
-                break;
-              case 'admin':
-                redirectPath = '/dashboard/admin';
-                break;
-              default:
-                redirectPath = '/user-profile-management'; // Fallback
-            }
-            navigate(redirectPath, { replace: true });
-          } else {
-            console.error("No user data returned from backend.");
-            navigate('/user-login?error=backend_failed', { replace: true });
-          }
+        if (backendToken && backendUser) {
+          // FIX 2: Use the unified login function from AuthContext. 
+          // This function handles saving token, setting user, checking roles, and redirecting 
+          // (including the redirection to /welcome-setup for users without a role).
+          login({ accessToken: backendToken, user: backendUser });
         } else {
-          console.error("No access token returned from backend.");
+          console.error("Missing token or user data from backend.");
           navigate('/user-login?error=backend_failed', { replace: true });
         }
       } catch (error) {
@@ -83,7 +60,15 @@ const Auth0Callback = () => {
     };
 
     processAuth0Login();
-  }, [isAuthenticated, getAccessTokenSilently, setAccessToken, setUser, navigate]);
+    // FIX 3: Updated dependency array
+  }, [isAuthenticated, getAccessTokenSilently, login, navigate]); 
+  */
+
+  // ADDED: Immediate redirect when flow is disabled
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate('/login', { replace: true });
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -92,10 +77,10 @@ const Auth0Callback = () => {
           <Icon name="Loader2" size={32} className="text-primary" />
         </div>
         <h1 className="text-xl font-medium text-foreground">
-          Completing your login...
+          Redirecting...
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Please wait while we set up your account.
+          Social login is temporarily disabled.
         </p>
       </div>
     </div>

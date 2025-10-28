@@ -1,9 +1,11 @@
 // Frontend/src/pages/user-registration/components/SocialLoginButtons.jsx
 import React from 'react';
-import { useAuth0 } from '@auth0/auth0-react'; // <-- New import
+import { useAuth0 } from '@auth0/auth0-react';
 import Icon from '../../../components/AppIcon';
 
-const SocialLoginButtons = ({ onSocialLogin, isLoading }) => {
+const SocialLoginButtons = ({ isLoading }) => {
+  // ⚠️ TEMPORARILY DISABLED SOCIAL LOGIN UI
+  /*
   const { loginWithRedirect } = useAuth0();
 
   const socialProviders = [
@@ -15,29 +17,23 @@ const SocialLoginButtons = ({ onSocialLogin, isLoading }) => {
       textColor: 'text-gray-700',
       borderColor: 'border-gray-300',
       hoverBg: 'hover:bg-gray-50'
-    },
-    {
-      id: 'github',
-      name: 'GitHub',
-      icon: 'Github',
-      bgColor: 'bg-gray-900',
-      textColor: 'text-white',
-      borderColor: 'border-gray-900',
-      hoverBg: 'hover:bg-gray-800'
     }
   ];
 
   const handleSocialLogin = (provider) => {
-    console.log(`Initiating ${provider} OAuth login`);
+    // Uses provider?.id for safe access and logging
+    console.log(`Initiating ${provider?.id} OAuth login`); 
+    
     // Auth0 handles the OAuth flow automatically
     loginWithRedirect({
-      connection: provider === 'google' ? 'google-oauth2' : 'github'
+      // Uses provider?.id to determine the correct connection name for Auth0
+      connection: provider?.id === 'google' ? 'google-oauth2' : 'github'
     });
   };
 
   return (
     <div className="space-y-4">
-      {/* Divider */}
+      
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
@@ -46,13 +42,14 @@ const SocialLoginButtons = ({ onSocialLogin, isLoading }) => {
           <span className="px-4 bg-card text-muted-foreground">Or continue with</span>
         </div>
       </div>
-      {/* Social Login Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      
+      <div className="grid grid-cols-1 gap-3">
         {socialProviders?.map((provider) => (
           <button
             key={provider?.id}
             type="button"
-            onClick={() => handleSocialLogin(provider?.id)}
+            // FIX: Pass the full provider object instead of just the ID string
+            onClick={() => handleSocialLogin(provider)}
             disabled={isLoading}
             className={`
               flex items-center justify-center px-4 py-3 border rounded-lg font-medium text-sm
@@ -66,13 +63,14 @@ const SocialLoginButtons = ({ onSocialLogin, isLoading }) => {
               name={provider?.icon}
               size={20}
               className="mr-3"
+              // FIX: Conditional color for Google icon
               color={provider?.id === 'google' ? '#4285f4' : 'currentColor'}
             />
             <span>Sign up with {provider?.name}</span>
           </button>
         ))}
       </div>
-      {/* Security Notice */}
+      
       <div className="mt-4 p-3 bg-muted rounded-lg">
         <div className="flex items-start space-x-2">
           <Icon name="Shield" size={16} className="text-primary mt-0.5 flex-shrink-0" />
@@ -83,6 +81,8 @@ const SocialLoginButtons = ({ onSocialLogin, isLoading }) => {
       </div>
     </div>
   );
+  */
+ return null; // <--- ADDED: Hide the component entirely
 };
 
 export default SocialLoginButtons;

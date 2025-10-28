@@ -1,84 +1,110 @@
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
-import DashboardLayout from '../shared/DashboardLayout';
-import { 
-  Users, 
-  Calendar, 
-  BookOpen, 
-  MessageSquare, 
-  TrendingUp, 
-  Settings,
-  DollarSign,
-  Clock,
-  Plus
-} from 'lucide-react';
+import React, { useState, useEffect } from "react"; 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  MessageSquare,
+  BookOpen,
+  PieChart,
+  Settings,
+  User,
+  DollarSign, 
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom"; 
 
-// Import coach dashboard components
-import CoachOverview from './components/CoachOverview';
-import ClientManagement from './components/ClientManagement';
-import EventManagement from './components/EventManagement';
-import BookingManagement from './components/BookingManagement';
-import CommunicationCenter from './components/CommunicationCenter';
-import ResourcesLibrary from './components/ResourcesLibrary';
-import CoachAnalytics from './components/CoachAnalytics';
-import CoachProfile from './components/CoachProfile';
+import DashboardLayout from "../shared/DashboardLayout";
+import CoachOverview from "./components/CoachOverview";
+import ClientManagement from "./components/ClientManagement";
+import BookingManagement from "./components/BookingManagement";
+import CommunicationCenter from "./components/CommunicationCenter";
+import ResourcesLibrary from "./components/ResourcesLibrary";
+import CoachAnalytics from "./components/CoachAnalytics";
+import AccountSettings from "../shared/AccountSettings";
+import CoachProfileEditor from "./components/coach-profile-editor";
+import SessionManagement from "./components/SessionManagement"; 
 
 const CoachDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+    // ✅ FIX: Define navigationItems first so helpers can access it immediately
+    const navigationItems = [
+        { id: "overview", label: "Overview", icon: LayoutDashboard },
+        { id: "clients", label: "Client Management", icon: Users },
+        { id: "bookings", label: "Bookings", icon: Calendar },
+        { id: "communication", label: "Communication", icon: MessageSquare },
+        { id: "resources", label: "Resources", icon: BookOpen },
+        { id: "analytics", label: "Analytics", icon: PieChart },
+        { id: "sessions", label: "Session Management", icon: DollarSign }, 
+        { id: "profile", label: "Edit Profile", icon: User },
+        { id: "settings", label: "Settings", icon: Settings },
+    ];
+    
+    const location = useLocation();
+    const navigate = useNavigate();
+    const currentPath = location.pathname;
+    const coachBasePath = "/dashboard/coach";
 
-  const navigationItems = [
-    { id: 'overview', label: 'Overview', icon: TrendingUp },
-    { id: 'clients', label: 'Clients', icon: Users },
-    { id: 'events', label: 'Events', icon: Calendar },
-    { id: 'bookings', label: 'Bookings', icon: Clock },
-    { id: 'communication', label: 'Communication', icon: MessageSquare },
-    { id: 'resources', label: 'Resources', icon: BookOpen },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'profile', label: 'Profile', icon: Settings }
-  ];
+    // Helper to extract the active tab ID from the URL path
+    const getActiveTabFromUrl = (path) => {
+        const parts = path.split('/');
+        const lastPart = parts[parts.length - 1];
+        // navigationItems is now in scope
+        const itemIds = navigationItems.map(item => item.id);
+        return itemIds.includes(lastPart) ? lastPart : 'overview';
+    };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return <CoachOverview />;
-      case 'clients':
-        return <ClientManagement />;
-      case 'events':
-        return <EventManagement />;
-      case 'bookings':
-        return <BookingManagement />;
-      case 'communication':
-        return <CommunicationCenter />;
-      case 'resources':
-        return <ResourcesLibrary />;
-      case 'analytics':
-        return <CoachAnalytics />;
-      case 'profile':
-        return <CoachProfile />;
-      default:
-        return <CoachOverview />;
-    }
-  };
+    // Initialize state using the helper function
+    const [activeTab, setActiveTab] = useState(getActiveTabFromUrl(currentPath));
+    
+    // Update activeTab whenever the URL changes
+    useEffect(() => {
+        setActiveTab(getActiveTabFromUrl(currentPath));
+    }, [currentPath]);
 
-  return (
-    <>
-      <Helmet>
-        <title>Coach Dashboard - The Katha</title>
-        <meta name="description" content="Manage your coaching business, clients, and sessions." />
-      </Helmet>
+    // Handler to change tab by updating the URL
+    const handleTabChange = (newTabId) => {
+        if (newTabId === 'overview') {
+            navigate(coachBasePath);
+        } else {
+            navigate(`${coachBasePath}/${newTabId}`);
+        }
+    };
 
-      <DashboardLayout
-        userType="coach"
-        navigationItems={navigationItems}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        title="Coach Dashboard"
-        subtitle="Manage your coaching business"
-      >
-        {renderContent()}
-      </DashboardLayout>
-    </>
-  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return <CoachOverview />;
+      case "clients":
+        return <ClientManagement />;
+      case "bookings":
+        return <BookingManagement />;
+      case "communication":
+        return <CommunicationCenter />;
+      case "resources":
+        return <ResourcesLibrary />;
+      case "analytics":
+        return <CoachAnalytics />;
+      case "sessions": 
+        return <SessionManagement />;
+      case "profile":
+        return <CoachProfileEditor />;
+      case "settings":
+        return <AccountSettings />;
+      default:
+        return <CoachOverview />;
+    }
+  };
+
+  return (
+    <DashboardLayout
+      navigationItems={navigationItems}
+      activeTab={activeTab}
+      onTabChange={handleTabChange} 
+      userName="Coach Emily"
+      userType="coach"
+    >
+      {renderContent()}
+    </DashboardLayout>
+  );
 };
 
 export default CoachDashboard;
