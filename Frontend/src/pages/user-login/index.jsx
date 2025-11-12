@@ -8,6 +8,7 @@ import Icon from '../../components/AppIcon';
 import { loginUser } from '../../auth/authApi';
 import { useAuth } from '../../auth/AuthContext';
 // import { useAuth0 } from '@auth0/auth0-react'; // Already commented out
+import { trackEvent } from '../../lib/amplitude'; // 🔑 ADDED: Import trackEvent
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -37,16 +38,35 @@ const UserLogin = () => {
     if (isRateLimited) return;
     setIsLoading(true);
     setError('');
+    
+    // 1. 🔑 AMPLITUDE TRACKING: Track the login attempt immediately
+    trackEvent('Login Attempted', { 
+        email_domain: formData.email.split('@')[1], 
+        has_captcha: showCaptcha,
+        remember_me: formData.rememberMe || false
+    });
+
 
     try {
       const response = await loginUser(formData);
       
+      // 2. 🔑 AMPLITUDE TRACKING: Track successful login
+      trackEvent('Login Succeeded');
      
       login(response.data);
 
     } catch (err) {
       const newAttemptCount = attemptCount + 1;
       setAttemptCount(newAttemptCount);
+        
+      const errorMessage = err?.response?.data?.error || 'Invalid credentials or network failure';
+
+      // 3. 🔑 AMPLITUDE TRACKING: Track failed login
+      trackEvent('Login Failed', {
+          error_message: errorMessage,
+          is_rate_limited: newAttemptCount >= 5, // true if this attempt triggered rate limiting
+      });
+
 
       if (newAttemptCount >= 3) setShowCaptcha(true);
       
@@ -116,18 +136,18 @@ const UserLogin = () => {
           <div className="text-center text-sm text-muted-foreground">
             <p>
               Need help? Contact our{' '}
-              {/* ✅ MODIFIED: Added onClick handler to trigger the alert */}
+              {/* ✅ MODIFIED: Added onClick handler to trigger the alert */}
               <a 
-                href="#" 
-                onClick={handleSupportClick} // 👈 Added handler here
-                className="text-primary hover:underline font-medium" // 👈 Added font-medium for better visibility
-              >
+                href="#" 
+                onClick={handleSupportClick} // 👈 Added handler here
+                className="text-primary hover:underline font-medium" // 👈 Added font-medium for better visibility
+              >
                 support team
               </a>
             </p>
           </div>
         </div>
-      </div>
+        </div>
     </div>
   );
 };
