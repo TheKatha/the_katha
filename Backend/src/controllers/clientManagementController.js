@@ -1,9 +1,9 @@
 // Backend/src/controllers/clientManagementController.js
 
-import { Op } from 'sequelize'; 
+const { Op } = require('sequelize'); // FIX: Converted import to require
 // --- Model Imports ---
 // Add this at the top
-import db from '../../models/index.js';
+const db = require('../../models'); // FIX: Converted import to require
 
 // Then destructure the models you need from 'db'
 const { User, Follow, Booking, ClientProfile, Session, CoachProfile } = db;
@@ -30,7 +30,7 @@ const formatDate = (date) => {
 // ==============================
 // GET Booked Clients (FIXED SQL QUERY)
 // ==============================
-export const getBookedClients = async (req, res) => {
+const getBookedClients = async (req, res) => { // FIX: Changed export const to const
     try {
         const coachId = req.user.userId; 
 
@@ -101,7 +101,7 @@ export const getBookedClients = async (req, res) => {
 // GET Followed Clients
 // Includes: profile pic, name, age, mail, following since date
 // ==============================
-export const getFollowedClients = async (req, res) => {
+const getFollowedClients = async (req, res) => { // FIX: Changed export const to const
     try {
         const coachId = req.user.userId; 
 
@@ -156,4 +156,10 @@ export const getFollowedClients = async (req, res) => {
         console.error('Error fetching clients who follow coach:', error);
         return res.status(500).json({ error: 'Failed to fetch follower clients.' });
     }
+};
+
+// FIX: Added CommonJS export
+module.exports = {
+    getBookedClients,
+    getFollowedClients
 };

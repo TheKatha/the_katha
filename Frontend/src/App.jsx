@@ -5,6 +5,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import AppRoutes from './Routes';
 import { Toaster } from 'sonner';
+import AmplitudeInit from './components/AmplitudeInit'; // 🔑 NEW IMPORT
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <AuthProvider>
           <div className="App">
             <Toaster richColors position="top-right" />
+            <AmplitudeInit /> {/* 🔑 NEW: Initialize Amplitude globally */}
             <AppRoutes />
           </div>
         </AuthProvider>
